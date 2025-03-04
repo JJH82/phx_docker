@@ -32,7 +32,7 @@ RUN microdnf install -y git make gcc gcc-c++ glibc-langpack-en tar ncurses opens
 
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
-ENV r=prod
+ENV MIX_ENV=prod
 
 # Erlang Solutions 공식 저장소 추가 및 Erlang/OTP 27 설치
 RUN curl -fsSL https://binaries2.erlang-solutions.com/rockylinux/8/esl-erlang_27.1_1~rockylinux~8_x86_64.rpm -o erlang.rpm && \
