@@ -1,0 +1,22 @@
+# ====아래 내용을 dockerfile에 붙여넣기 전에 선작업해야하는 것==========
+# %USERPROFILE%에 있는 .mix, .hex를 dockerfile있는곳으로 복사할것 그말은 프로젝트 생성하여서 PC에서 컴파일 되어 있어야함
+# dockerfile 있는 곳으로 생성할것 test는 mix phx.new text로 프로젝트를 생성
+#=======================================================================
+# tailwind 컴파일 필요한 파일 tailwind-linux-x64,linux-x64-0.17.11 파일 다운로드
+RUN curl -fsSL https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.3/tailwindcss-linux-x64 -o tailwind-linux-x64  
+RUN curl -fsSL https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.17.11.tgz -o linux-x64-0.17.11.tgz 
+RUN tar -xzf ./linux-x64-0.17.11.tgz 
+RUN mv ./package/bin/esbuild ./esbuild-linux-x64 
+RUN rm -f *.tgz 
+RUN rm -Rf package 
+RUN chmod 755 *-x64 
+
+COPY .mix /home/jenkins/.mix
+COPY .hex /home/jenkins/.hex
+
+COPY test /home/jenkins/test
+RUN mkdir -p ./test/_build
+
+RUN chown -Rf ${UID}:${GID} /home/jenkins
+RUN mv ./*-x64 ./test/_build
+

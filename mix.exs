@@ -64,6 +64,8 @@ defmodule Raffley.MixProject do
       {:number, "== 1.0.5"},
       {:pbkdf2_elixir, "== 2.3.1"},
       {:logger_file_backend, "== 0.0.14"}
+      {:samly, "== 1.4.0"},
+      {:nimble_totp, "== 1.0.0"}
     ]
   end
 
