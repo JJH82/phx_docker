@@ -1,19 +1,32 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal AS builder
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.6 AS builder
 
 # Jenkins 에이전트의 UID/GID를 전달받기 위한 변수 선언
 ARG UID=1000
 ARG GID=1000
 
 # 필수 패키지 설치
-RUN microdnf install -y git make gcc gcc-c++ glibc-langpack-en tar ncurses openssl unzip && microdnf clean all
+RUN microdnf install -y \
+    git make gcc gcc-c++ perl autoconf \
+    tar gzip unzip glibc-langpack-en openssl openssl-devel \
+    ncurses ncurses-devel ncurses-libs libnsl2 zlib zlib-devel
 
-# Erlang Solutions 공식 저장소 추가 및 Erlang/OTP 27 설치
-RUN curl -fsSL https://binaries2.erlang-solutions.com/centos/esl-erlang-27/esl-erlang_27.3.4_1~centos~8_x86_64.rpm -o erlang.rpm && \
-    rpm -ivh ./erlang.rpm && \
-    rm ./erlang.rpm
+# kerl 다운로드 및 설정 (erlang build 툴) 
+RUN curl -O https://raw.githubusercontent.com/kerl/kerl/master/kerl && \
+    chmod +x kerl && \
+    mv kerl /usr/local/bin/
 
-# Elixir 1.18.4 (OTP 27) 설치
-RUN curl -fsSL https://repo.hex.pm/builds/elixir/v1.18.4-otp-27.zip -o elixir.zip && \
+# 빌드 시 wx 및 불필요한 GUI 지원 명시적 비활성화
+ENV KERL_CONFIGURE_OPTIONS="--without-wx --without-javac"
+
+# Erlang 28.5 빌드 및 설치 (시간이 약간 소요됩니다)
+RUN kerl build 28.5.0.3 28.5.0.3 && \ 
+    kerl install 28.5.0.3 /usr/local/erlang/28.5.0.3
+
+# 환경 변수 적용
+ENV PATH="/usr/local/erlang/28.5.0.3/bin:$PATH"
+
+# Elixir 1.20.2 (OTP 28) 설치
+RUN curl -fsSL https://repo.hex.pm/builds/elixir/v1.20.2-otp-28.zip -o elixir.zip && \
     unzip elixir.zip -d /usr/local/elixir && \
     rm elixir.zip && \
     ln -s /usr/local/elixir/bin/* /usr/local/bin/
@@ -32,6 +45,4 @@ WORKDIR /home/jenkins
 # =================================================================
 
 # 환경 변수 
-ENV LANG=en_US.UTF-8
-ENV LANGUAGE=en_US:en
 ENV MIX_ENV=prod
